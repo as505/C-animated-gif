@@ -1,0 +1,1 @@
+This project is an attempt at creating an animated GIF entirely in C, to better understand the GIF file format.
