@@ -53,6 +53,15 @@ int write_header(FILE* fp) {
     return 1;
 }
 
+// The trailer indicates the end of the Gif file
+int write_trailer(FILE* fp) {
+    // 0x3B is the fixed value used to mark the end of a GIF datastream
+    char end = 0x3B;
+    fwrite(&end, sizeof(char), 1, fp);
+
+    return 1;
+};
+
 int test_header() {
     FILE* fp = fopen(FILENAME, "r");
     char signature[6];
@@ -76,10 +85,17 @@ int test_header() {
 
 int main() {
 
-    FILE* fp = fopen(FILENAME, "w");
     // write to file
     printf("Writing header...\n");
+    
+    FILE* fp = fopen(FILENAME, "w");
+
     write_header(fp);
+
+    // write_data(fp);
+
+    write_trailer(fp);
+
     fclose(fp);
 
     printf("File created!\n");
