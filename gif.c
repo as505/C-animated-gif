@@ -146,13 +146,15 @@ int write_trailer(FILE* fp) {
 
 int debug_print_gif_file_data() {
     FILE* fp = fopen(FILENAME, "r");
-    char signature[6];
+    char *signature[3];
+    char *version[3];
     short int WH[2];
     unsigned char PF = 0;
     char bgci = 0;
     char pixelAR = 0;
 
-    fread(signature, 6, 1, fp);
+    fread(signature, 1, 3, fp);
+    fread(version, 1, 3, fp);
     fread(WH, sizeof(short), 2, fp);
     fread(&PF, 1, 1, fp);
     fread(&bgci, 1, 1, fp);
@@ -170,7 +172,7 @@ int debug_print_gif_file_data() {
 
 
     printf("Header:\n");
-    printf("\nSig: %s\nHW: %d %d\n", signature, WH[0], WH[1]);
+    printf("\nSignature: %s\nVer: %s\nHW: %d %d\n", *signature, *version, WH[0], WH[1]);
     printf("Packed Fields: 0x%x\n", PF);
     // Bitshift packed fields to the right so only relevant field is printed. 
     // Add one to color value to display actual color resolution value
