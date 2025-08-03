@@ -162,24 +162,42 @@ int debug_print_gif_file_data() {
     unsigned char GCT    = PF & 0b10000000;
     unsigned char colRes = PF & 0b01110000;
     unsigned char sort   = PF & 0b00001000;
-    // Double since we plan to use pow() later
-    double size   = PF & 0b00000111;
+    // Double since we use pow()
+    double d_size   = PF & 0b00000111;
+    // For GCT size, add 1 to the value stored, and raise 2 to the power of this value
+    d_size = pow(2, d_size+1);
+    int size = (int) d_size;
+
 
     printf("Header:\n");
     printf("\nSig: %s\nHW: %d %d\n", signature, WH[0], WH[1]);
     printf("Packed Fields: 0x%x\n", PF);
     // Bitshift packed fields to the right so only relevant field is printed. 
     // Add one to color value to display actual color resolution value
-    // For GCT size, add 1 to the value stored, and raise 2 to the power of this value
-    printf("GCT: %d, Color Resolution: %d, Sort: %d, Size: %d\n", (GCT >> 7), (colRes >> 4) + 1, (sort >> 3), (int)pow(2, size+1));
+    printf("GCT: %d, Color Resolution: %d, Sort: %d, Size: %d\n", (GCT >> 7), (colRes >> 4) + 1, (sort >> 3), size);
     printf("Background color index: %d\n", bgci);
     printf("Pixel aspect ratio: %d\n", pixelAR);
     printf("---------------------\n");
-    
-    printf("Global Color Table:\n");
+    printf("Global Color Table:\n\n");
 
+    // Create array to hold Global Color Table
+    unsigned char *colors = calloc(1, size);
+    assert(colors != NULL);
 
+    // Read Global Color Table
+    fread(colors, 5*3, sizeof(unsigned char), fp);
+    // Print Table
+    for (int i = 0; i < 5*3; i++){
+        printf("Col %d:", i/3);
+        printf("\t%d", colors[i]);
+        i = i++;
+        printf("\t%d", colors[i]);
+        i = i++;
+        printf("\t%d\n", colors[i]);
+    }
 
+    // Free malloc
+    free(colors);
     return 1;
 }
 
