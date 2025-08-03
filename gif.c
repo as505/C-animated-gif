@@ -185,7 +185,7 @@ int debug_print_gif_file_data() {
     assert(colors != NULL);
 
     // Read Global Color Table
-    fread(colors, 5*3, sizeof(unsigned char), fp);
+    fread(colors, (5*3), sizeof(unsigned char), fp);
     // Print Table
     for (int i = 0; i < 5*3; i++){
         printf("Col %d:", i/3);
@@ -195,9 +195,25 @@ int debug_print_gif_file_data() {
         i = i++;
         printf("\t%d\n", colors[i]);
     }
-
     // Free malloc
     free(colors);
+    printf("---------------------\n");
+
+    printf("Image Descriptor:\n\n");
+    
+    char image_seperator;
+    unsigned short image_params[4]; 
+    char packed_fields;
+
+    fread(&image_seperator, 1, 1, fp);
+    fread(image_params, 2, 4, fp);
+    fread(&packed_fields, 1, 1, fp);
+
+    printf("Image Seperator 0x2c: %x\n", image_seperator);
+    printf("Left: %d, Top: %d, Width: %d, Height: %d\n", image_params[0], image_params[1], image_params[2], image_params[3]);
+    printf("Packed Fields: 0x%x\n", packed_fields);
+
+
     return 1;
 }
 
@@ -211,7 +227,7 @@ int main() {
     write_header(fp, 128, 128);
     // Use 5 color GCT
     create_RGB_global_color_table(fp);
-    // write_data(fp);
+    write_image_descriptor(fp, 0, 0, 128, 128);
 
     write_trailer(fp);
 
