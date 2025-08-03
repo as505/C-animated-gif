@@ -1,6 +1,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <assert.h>
+#include <math.h>
 
 #define FILENAME "created.gif"
 
@@ -51,14 +52,36 @@ int create_RGB_global_color_table(FILE* fp) {
 
 */
 int write_image_descriptor(FILE* fp, unsigned short left, unsigned short top, unsigned short width, unsigned short height) {
+    
     // Fixed value, marks begining of new image descriptor
     char image_seperator = 0x2c;
+    fwrite(&image_seperator, 1, 1, fp);
+    
+    // Write image possition and dimentions
+    unsigned short image[] = {left, top, width, height};
+    fwrite(image, 2, 4, fp);
+    
+    // Write packed fields
     /*
-    unsigned short left;
-    unsigned short top;
-    unsigned short width;
-    unsigned short height;
+    1 bit    No local color table
+    0 
+
+    1 bit    Image Not interlaced
+    0
+
+    1 bit    Local color table not sorted, nor in use
+    0
+
+    2 bits   Reserved
+    00
+
+    3bits   Size of local color table is 0, since local color table is not in use
+    000
+
+    Since local color table is not in use, packed field byte is 00000000
     */
+    char packed_fields = 0x00;
+    fwrite(&packed_fields, 1, 1, fp);
 
 
     return 1;
@@ -125,7 +148,7 @@ int debug_print_gif_file_data() {
     FILE* fp = fopen(FILENAME, "r");
     char signature[6];
     short int WH[2];
-    char PF = 0;
+    unsigned char PF = 0;
     char bgci = 0;
     char pixelAR = 0;
 
@@ -135,10 +158,28 @@ int debug_print_gif_file_data() {
     fread(&bgci, 1, 1, fp);
     fread(&pixelAR, 1, 1, fp);
 
+    // Use bitmask to unpack packed fields for printing
+    unsigned char GCT    = PF & 0b10000000;
+    unsigned char colRes = PF & 0b01110000;
+    unsigned char sort   = PF & 0b00001000;
+    // Double since we plan to use pow() later
+    double size   = PF & 0b00000111;
+
+    printf("Header:\n");
     printf("\nSig: %s\nHW: %d %d\n", signature, WH[0], WH[1]);
-    printf("Packed Fields: 0x%x\n", PF & 0xff);
+    printf("Packed Fields: 0x%x\n", PF);
+    // Bitshift packed fields to the right so only relevant field is printed. 
+    // Add one to color value to display actual color resolution value
+    // For GCT size, add 1 to the value stored, and raise 2 to the power of this value
+    printf("GCT: %d, Color Resolution: %d, Sort: %d, Size: %d\n", (GCT >> 7), (colRes >> 4) + 1, (sort >> 3), (int)pow(2, size+1));
     printf("Background color index: %d\n", bgci);
     printf("Pixel aspect ratio: %d\n", pixelAR);
+    printf("---------------------\n");
+    
+    printf("Global Color Table:\n");
+
+
+
     return 1;
 }
 
@@ -149,7 +190,7 @@ int main() {
     
     FILE* fp = fopen(FILENAME, "w");
 
-    write_header(fp, 128, 256);
+    write_header(fp, 128, 128);
     // Use 5 color GCT
     create_RGB_global_color_table(fp);
     // write_data(fp);
