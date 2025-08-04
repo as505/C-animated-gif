@@ -146,19 +146,21 @@ int write_trailer(FILE* fp) {
 
 int debug_print_gif_file_data() {
     FILE* fp = fopen(FILENAME, "r");
-    char *signature[3];
-    char *version[3];
+    char signature[3];
+    char version[3];
     short int WH[2];
     unsigned char PF = 0;
     char bgci = 0;
     char pixelAR = 0;
+    int count = 0;
+    count += fread(signature, 1, 3, fp);
+    count +=fread(version, 1, 3, fp);
+    count += fread(WH, sizeof(short), 2, fp);
+    count +=fread(&PF, 1, 1, fp);
+    count +=fread(&bgci, 1, 1, fp);
+    count +=fread(&pixelAR, 1, 1, fp);
 
-    fread(signature, 1, 3, fp);
-    fread(version, 1, 3, fp);
-    fread(WH, sizeof(short), 2, fp);
-    fread(&PF, 1, 1, fp);
-    fread(&bgci, 1, 1, fp);
-    fread(&pixelAR, 1, 1, fp);
+    assert(count == 11);
 
     // Use bitmask to unpack packed fields for printing
     unsigned char GCT    = PF & 0b10000000;
@@ -172,11 +174,12 @@ int debug_print_gif_file_data() {
 
 
     printf("Header:\n");
-    printf("\nSignature: %s\nVer: %s\nHW: %d %d\n", *signature, *version, WH[0], WH[1]);
+    printf("\nSignature: %s\nVersion: %s\n", signature, version);
+    printf("HW: %d %d\n", WH[0], WH[1]);
     printf("Packed Fields: 0x%x\n", PF);
     // Bitshift packed fields to the right so only relevant field is printed. 
     // Add one to color value to display actual color resolution value
-    printf("GCT: %d, Color Resolution: %d, Sort: %d, Size: %d\n", (GCT >> 7), (colRes >> 4) + 1, (sort >> 3), size);
+    printf("GCT: %d, Color Resolution: %d, Sort: %d, GCT Size: %d\n", (GCT >> 7), (colRes >> 4) + 1, (sort >> 3), size);
     printf("Background color index: %d\n", bgci);
     printf("Pixel aspect ratio: %d\n", pixelAR);
     printf("---------------------\n");
