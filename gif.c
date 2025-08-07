@@ -5,6 +5,17 @@
 
 #define FILENAME "created.gif"
 
+// Attempts to write an empty data stream for the gif image data
+int write_empty_data(FILE* fp) {
+    // Zero bits for LZW codes
+    char code_size = 0x00;
+
+    // Block size is 0, as it contains no data
+    char block_size = 0x00;
+
+    // Terminator block is 0 0 0 0 0 0 0 0
+    char terminator = 0x00;
+}
 
 // Writes a color to a color table pointed to by fp
 // Colors are defined as 3 bytes R, G, and B
@@ -233,6 +244,8 @@ int main() {
     // Use 5 color GCT
     create_RGB_global_color_table(fp);
     write_image_descriptor(fp, 0, 0, 128, 128);
+    // This should be replaced when LZW code is available
+    write_empty_data(fp);
 
     write_trailer(fp);
 
