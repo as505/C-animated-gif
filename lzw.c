@@ -2,20 +2,43 @@
 #include <stdio.h>
 #include <assert.h>
 
-// Lenght of generated datastream, used for development/debugging
-#define LENGHT 100
-#define COLOR_TABLE_SIZE 5
-// Debug file for LZW to write to
-#define DEBUG_OUTPUT_STREAM "LZW_debug_out.txt"
-
-
-
 /*
 Gif files compress image data by using a variant of LZW compression.
 Instead of storing RBG values, Gif files are encoded with indexes into a color table. 
 The variant LZW algorithm can then be used to compress this stream if indexes into a stream of patterns.
 */
 
+
+// Lenght of generated datastream, used for development/debugging
+#define LENGHT 100
+#define COLOR_TABLE_SIZE 5
+// Debug file for LZW to write to
+#define DEBUG_OUTPUT_STREAM "LZW_debug_out.txt"
+
+// Array of color table indexes and compression codes
+typedef struct {
+    // Array of compression codes or color table indexes
+    unsigned char *code_array;
+    // Space in array
+    unsigned int array_size;
+    // Current array index
+    unsigned int iter;
+} code_table_t;
+
+
+// Create new code table
+code_table_t *create_code_table(int size){
+    code_table_t new;
+    new.array_size = size;
+    new.iter = 0;
+    // Start by allocating 'size' bits for the array
+    // This is equal to the uncompressed data, and should be more than enough space
+    // Dynamic array could be used to reduce memory usage, at a slight runtime cost
+    unsigned char c_array = calloc(size, 1);
+
+    // Return pointer to newly created struct
+    return &new;
+};
 
 /*
     Generate a random stream of uncompressed Color Table indexes
@@ -55,8 +78,19 @@ unsigned char compute_LZW_minimum_code_size(unsigned char CTsize){
     return num_bits;
 }
 
+/*
+Main part of LZW compression
 
-int LZW_compress(FILE* output_stream, unsigned char *input_stream, int num_chars){
+    Output stream is where data is written, file pointer should already point to correct location in gif file
+
+    Input stream and num chars describe the uncompressed index data
+
+*/
+int LZW_compress(FILE* output_stream, unsigned char *input_stream, int num_chars, unsigned char min_code_size, unsigned char num_colors){
+    // Create empty code table
+    code_table_t *table = create_code_table(num_chars);
+
+
 
 }
 
@@ -75,18 +109,13 @@ main(){
     }
     printf("\n");
 
-    compute_LZW_minimum_code_size(4);
-    compute_LZW_minimum_code_size(8);
-    compute_LZW_minimum_code_size(16);
-    compute_LZW_minimum_code_size(32);
-    compute_LZW_minimum_code_size(64);
-    compute_LZW_minimum_code_size(128);
-    compute_LZW_minimum_code_size(256);
-
+    unsigned char min_code_size = compute_LZW_minimum_code_size(COLOR_TABLE_SIZE);
+    
     // Create debugg output stream for LZW output
     // Replaced with gif file pointer from gif.c 
-    //FILE *d_fp = fopen(DEBUG_OUTPUT_STREAM, "w");
-
+    FILE *d_fp = fopen(DEBUG_OUTPUT_STREAM, "w");
+    
+    LZW_compress(d_fp, uncompressed_stream, LENGHT, min_code_size);
 
 
     // Free allocated memmory
